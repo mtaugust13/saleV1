@@ -65,32 +65,42 @@ function token(){ return localStorage.getItem("sessionToken"); }
 function showLogin(){ login.style.display="block"; app.style.display="none"; }
 function showApp(){ login.style.display="none"; app.style.display="block"; }
 function statusMsg(t){ status.innerText=t; }
-
-async function login() {
-  const pin = document.getElementById("pin").value;
-
+async function login(){
   try {
     const res = await fetch(API_URL + "?login=1", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pin })
+      method: "OPTIONS"
     });
-
-    const data = await res.json();
-    console.log("login response:", data);
-
-    if (data.token) {
-      localStorage.setItem("sessionToken", data.token);
-      showApp();          // ⭐ 立刻切畫面
-      loadCount();        // ⭐ 立刻打下一個 API
-    } else {
-      alert("PIN 錯誤");
-    }
-  } catch (e) {
-    alert("連線錯誤");
-    console.error(e);
+    alert("OPTIONS status=" + res.status);
+  } catch(e) {
+    alert("OPTIONS error=" + e);
   }
 }
+
+//async function login() {
+//  const pin = document.getElementById("pin").value;
+
+//  try {
+//    const res = await fetch(API_URL + "?login=1", {
+//      method: "POST",
+//      headers: { "Content-Type": "application/json" },
+//      body: JSON.stringify({ pin })
+//    });
+
+//    const data = await res.json();
+//    console.log("login response:", data);
+
+//    if (data.token) {
+//      localStorage.setItem("sessionToken", data.token);
+//      showApp();          // ⭐ 立刻切畫面
+//      loadCount();        // ⭐ 立刻打下一個 API
+//    } else {
+//      alert("PIN 錯誤");
+//    }
+//  } catch (e) {
+//    alert("連線錯誤");
+//    console.error(e);
+//  }
+//}
 
 async function init(){
   await loadBuyers();
@@ -142,6 +152,7 @@ if(token()){ showApp(); init(); } else showLogin();
 </script>
 </body>
 </html>
+
 
 
 
