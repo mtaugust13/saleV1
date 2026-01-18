@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>salesv1 Order</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#111;color:#fff;margin:0;display:flex;justify-content:center;align-items:center;height:100vh}
+.box{width:100%;max-width:380px;padding:16px}
+h2{margin:8px 0}
+input,select,button{width:100%;font-size:18px;padding:12px;margin-top:10px;border-radius:10px;border:none}
+button{background:#4CAF50;color:#fff}
+button.secondary{background:#555}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+#status{margin-top:10px;font-size:14px;color:#aaa}
+</style>
+</head>
+
+<body>
+
+<div id="login" class="box">
+  <h2>輸入 PIN</h2>
+  <input id="pin" type="password" inputmode="numeric" placeholder="PIN">
+  <button onclick="login()">登入</button>
+  <div id="status"></div>
+</div>
+
+<div id="app" class="box" style="display:none;">
+  <h2>新增訂單</h2>
+
+  <input id="buyer" list="buyers" placeholder="訂購人">
+  <datalist id="buyers"></datalist>
+
+  <input id="name" list="products" placeholder="商品名稱" onchange="loadOptions()">
+  <datalist id="products"></datalist>
+
+  <div class="row">
+    <select id="color"><option value="">顏色</option></select>
+    <select id="size"><option value="">尺寸</option></select>
+  </div>
+
+  <div class="row">
+    <input id="qty" type="number" min="1" value="1">
+    <input id="price" type="number" placeholder="價格">
+  </div>
+
+  <input id="note" placeholder="備註">
+
+  <button onclick="submitOrder()">送出訂單</button>
+  <button class="secondary" onclick="logout()">登出</button>
+
+  <div id="status"></div>
+</div>
+
+<script>
+const API_URL = "https://sales-v1-api-26316719641.asia-east1.run.app"; // ← 改這行
+
+function token(){ return localStorage.getItem("sessionToken"); }
+function showLogin(){ login.style.display="block"; app.style.display="none"; }
+function showApp(){ login.style.display="none"; app.style.display="block"; }
+function statusMsg(t){ status.innerText=t; }
+
+async function login(){
+  statusMsg("登入中...");
+  const r = await fetch(API_URL+"?login=1",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin:pin.value})});
+  const d = await r.json();
+  if(d.token){ localStorage.setItem("sessionToken",d.token); showApp(); init(); statusMsg(""); }
+  else statusMsg("PIN 錯誤");
+}
+
+async function init(){
+  await loadBuyers();
+  await loadProducts();
+}
+
+async function loadBuyers(){
+  const r = await fetch(API_URL+"?action=getBuyerNames",{headers:{"x-session-token":token()}});
+  const list = await r.json();
+  buyers.innerHTML="";
+  list.forEach(n=>{ const o=document.createElement("option"); o.value=n; buyers.appendChild(o); });
+}
+
+async function loadProducts(){
+  const r = await fetch(API_URL+"?action=getProducts",{headers:{"x-session-token":token()}});
+  const list = await r.json();
+  products.innerHTML="";
+  list.forEach(p=>{ const o=document.createElement("option"); o.value=p.name; products.appendChild(o); });
+}
+
+async function loadOptions(){
+  color.innerHTML='<option value="">顏色</option>';
+  size.innerHTML='<option value="">尺寸</option>';
+  const r = await fetch(API_URL+"?action=getProductOptions&name="+encodeURIComponent(name.value),{headers:{"x-session-token":token()}});
+  const d = await r.json();
+  d.colors.forEach(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c; color.appendChild(o); });
+  d.sizes.forEach(s=>{ const o=document.createElement("option"); o.value=s; o.textContent=s; size.appendChild(o); });
+}
+
+async function submitOrder(){
+  const body={
+    buyer:buyer.value,
+    name:name.value,
+    color:color.value,
+    size:size.value,
+    qty:Number(qty.value),
+    price:Number(price.value),
+    note:note.value
+  };
+  statusMsg("送出中...");
+  const r = await fetch(API_URL+"?action=appendOrder",{method:"POST",headers:{"Content-Type":"application/json","x-session-token":token()},body:JSON.stringify(body)});
+  const d = await r.json();
+  statusMsg(d.status==="OK"?"已送出":"失敗");
+}
+
+function logout(){ localStorage.removeItem("sessionToken"); showLogin(); }
+
+if(token()){ showApp(); init(); } else showLogin();
+</script>
+</body>
+</html>
