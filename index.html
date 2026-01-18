@@ -67,37 +67,27 @@ function showApp(){ login.style.display="none"; app.style.display="block"; }
 function statusMsg(t){ status.innerText=t; }
 
 async function login(){
-  statusMsg("登入中...");
+  alert("login clicked");
 
   try {
+    alert("API_URL = " + API_URL);
+
     const res = await fetch(API_URL + "?login=1", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pin: pin.value })
+      body: JSON.stringify({ pin: document.getElementById("pin").value })
     });
 
-    if (!res.ok) {
-      statusMsg("登入失敗（HTTP " + res.status + "）");
-      return;
-    }
+    alert("fetch done, status=" + res.status);
 
     const data = await res.json();
-    console.log("login response:", data);
-
-    if (data.token) {
-      localStorage.setItem("sessionToken", data.token);
-      showApp();
-      await init();   // ⭐ 非常重要
-      statusMsg("登入成功");
-    } else {
-      statusMsg("PIN 錯誤");
-    }
+    alert("response = " + JSON.stringify(data));
 
   } catch (e) {
-    console.error(e);
-    statusMsg("連線錯誤");
+    alert("error = " + e);
   }
 }
+
 
 async function init(){
   await loadBuyers();
@@ -149,6 +139,7 @@ if(token()){ showApp(); init(); } else showLogin();
 </script>
 </body>
 </html>
+
 
 
 
