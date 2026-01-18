@@ -58,6 +58,8 @@ button.secondary{background:#555}
 </div>
 
 <script>
+alert("JS loaded");
+
 const API_URL = "https://sales-v1-api-26316719641.asia-east1.run.app"; // ← 改這行
 
 function token(){ return localStorage.getItem("sessionToken"); }
@@ -123,3 +125,4 @@ if(token()){ showApp(); init(); } else showLogin();
 </script>
 </body>
 </html>
+
