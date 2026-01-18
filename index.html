@@ -58,7 +58,6 @@ button.secondary{background:#555}
 </div>
 
 <script>
-alert("JS loaded");
 
 const API_URL = "https://sales-v1-api-26316719641.asia-east1.run.app"; // ← 改這行
 
@@ -68,12 +67,16 @@ function showApp(){ login.style.display="none"; app.style.display="block"; }
 function statusMsg(t){ status.innerText=t; }
 
 async function login(){
-  statusMsg("登入中...");
-  const r = await fetch(API_URL+"?login=1",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin:pin.value})});
-  const d = await r.json();
-  if(d.token){ localStorage.setItem("sessionToken",d.token); showApp(); init(); statusMsg(""); }
-  else statusMsg("PIN 錯誤");
+  alert("login clicked");
 }
+
+//async function login(){
+//  statusMsg("登入中...");
+//  const r = await fetch(API_URL+"?login=1",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin:pin.value})});
+//  const d = await r.json();
+//  if(d.token){ localStorage.setItem("sessionToken",d.token); showApp(); init(); statusMsg(""); }
+//  else statusMsg("PIN 錯誤");
+//}
 
 async function init(){
   await loadBuyers();
@@ -125,4 +128,5 @@ if(token()){ showApp(); init(); } else showLogin();
 </script>
 </body>
 </html>
+
 
