@@ -62,8 +62,17 @@ button.secondary{background:#555}
 const API_URL = "https://sales-v1-api-26316719641.asia-east1.run.app"; // ← 改這行
 
 function token(){ return localStorage.getItem("sessionToken"); }
-function showLogin(){ login.style.display="block"; app.style.display="none"; }
-function showApp(){ login.style.display="none"; app.style.display="block"; }
+  
+function showLogin() {
+  document.getElementById("login").style.display = "block";
+  document.getElementById("app").style.display = "none";
+}
+
+function showApp() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
+}
+
 function statusMsg(t){ status.innerText=t; }
 async function login(){
   try {
@@ -148,6 +157,7 @@ if(token()){ showApp(); init(); } else showLogin();
 </script>
 </body>
 </html>
+
 
 
 
