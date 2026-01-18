@@ -27,7 +27,7 @@ button.secondary{background:#555}
   <h2>輸入 PIN</h2>
   <input id="pin" type="password" inputmode="numeric" placeholder="PIN">
   <button onclick="login()">登入</button>
-  <div id="status"></div>
+  <div id="loginstatus"></div>
 </div>
 
 <div id="app" class="box" style="display:none;">
@@ -54,7 +54,7 @@ button.secondary{background:#555}
   <button onclick="submitOrder()">送出訂單</button>
   <button class="secondary" onclick="logout()">登出</button>
 
-  <div id="status"></div>
+  <div id="appstatus"></div>
 </div>
 
 <script>
@@ -73,7 +73,13 @@ function showApp() {
   document.getElementById("app").style.display = "block";
 }
 
-function statusMsg(t){ status.innerText=t; }
+function statusMsg(t){
+  const s =
+    document.getElementById("appStatus") ||
+    document.getElementById("loginStatus");
+  if (s) s.innerText = t;
+}
+
 async function login(){
   try {
     const res = await fetch(API_URL + "?login=1", {
@@ -96,7 +102,7 @@ async function login(){
     if (data.token) {
       localStorage.setItem("sessionToken", data.token);
       showApp();
-      loadCount();
+      await init();   // ✅ load buyers + products
     } else {
       alert("PIN 錯誤");
     }
@@ -157,6 +163,7 @@ if(token()){ showApp(); init(); } else showLogin();
 </script>
 </body>
 </html>
+
 
 
 
