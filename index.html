@@ -68,39 +68,35 @@ function statusMsg(t){ status.innerText=t; }
 async function login(){
   try {
     const res = await fetch(API_URL + "?login=1", {
-      method: "OPTIONS"
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: pin.value })
     });
-    alert("OPTIONS status=" + res.status);
+
+    const text = await res.text();   // ⭐ 關鍵：先用 text
+    console.log("login raw response:", text);
+
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      alert("後端回傳不是 JSON：" + text);
+      return;
+    }
+
+    if (data.token) {
+      localStorage.setItem("sessionToken", data.token);
+      showApp();
+      loadCount();
+    } else {
+      alert("PIN 錯誤");
+    }
+
   } catch(e) {
-    alert("OPTIONS error=" + e);
+    alert("連線錯誤：" + e);
   }
 }
 
-//async function login() {
-//  const pin = document.getElementById("pin").value;
-
-//  try {
-//    const res = await fetch(API_URL + "?login=1", {
-//      method: "POST",
-//      headers: { "Content-Type": "application/json" },
-//      body: JSON.stringify({ pin })
-//    });
-
-//    const data = await res.json();
-//    console.log("login response:", data);
-
-//    if (data.token) {
-//      localStorage.setItem("sessionToken", data.token);
-//      showApp();          // ⭐ 立刻切畫面
-//      loadCount();        // ⭐ 立刻打下一個 API
-//    } else {
-//      alert("PIN 錯誤");
-//    }
-//  } catch (e) {
-//    alert("連線錯誤");
-//    console.error(e);
-//  }
-//}
 
 async function init(){
   await loadBuyers();
@@ -152,6 +148,7 @@ if(token()){ showApp(); init(); } else showLogin();
 </script>
 </body>
 </html>
+
 
 
 
