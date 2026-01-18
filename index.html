@@ -259,35 +259,35 @@ async function apiCall(action, method = "GET", body = null) {
 }
 
 // === Login ===
-async function login() {
-  const pinInput = document.getElementById('pin');
-  
-  if (!pinInput.value) {
-    setStatus('請輸入 PIN 碼');
-    return;
-  }
-  
+async function login(){
   try {
-    setStatus('登入中...');
-    
     const res = await fetch(API_URL + "?login=1", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pin: pinInput.value })
+      body: JSON.stringify({ pin: pin.value })
     });
 
-    
+    const text = await res.text();   // ⭐ 關鍵：先用 text
+    console.log("login raw response:", text);
+
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      alert("後端回傳不是 JSON：" + text);
+      return;
+    }
+
     if (data.token) {
       localStorage.setItem("sessionToken", data.token);
-      setStatus('登入成功');
       showApp();
-      await initializeApp();
+      await initializeApp();   // ✅ load buyers + products
     } else {
-      setStatus('PIN 錯誤');
+      alert("PIN 錯誤");
     }
 
   } catch(e) {
-    setStatus('連線錯誤：' + e.message);
+    alert("連線錯誤：" + e);
   }
 }
 
@@ -442,6 +442,9 @@ window.addEventListener('load', function() {
     showLogin();
   }
 });
+
+// Alternative: immediate check (backup method style)
+if(token()){ showApp(); initializeApp(); } else showLogin();
 
 </script>
 
