@@ -134,10 +134,41 @@
       text-align: center;
       color: #d32f2f;
     }
+    
+    /* Top navigation bar */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      right: 0;
+      padding: 10px;
+      z-index: 1000;
+    }
+    
+    .nav-btn {
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .nav-btn:hover {
+      background: #45a049;
+    }
   </style>
 </head>
 
 <body>
+
+<!-- Top Navigation -->
+<div id="topNav" class="top-nav" style="display:none;">
+  <a href="additem.html" class="nav-btn">新增商品</a>
+</div>
 
 <!-- Login Screen -->
 <div id="loginScreen" class="login-container">
@@ -226,11 +257,13 @@ function setStatus(msg) {
 function showLogin() {
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("mainApp").style.display = "none";
+  document.getElementById("topNav").style.display = "none";
 }
 
 function showApp() {
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("mainApp").style.display = "block";
+  document.getElementById("topNav").style.display = "block";
 }
 
 // === API Functions ===
