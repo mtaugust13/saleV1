@@ -47,8 +47,8 @@
     }
 
     .option-select {
-      width: 50%;
-      max-width: 100px;
+      width: 60%;
+      max-width: 150px;
     }
 
     .qty-input {
@@ -326,6 +326,20 @@ function setupCodeAutocomplete() {
   codeInput.addEventListener('focus', () => {
     loadProductCodesInBackground();
   });
+  codeInput.addEventListener('input', () => {
+    const value = codeInput.value.trim().toUpperCase();
+    if (!isCompleteCode(value)) {
+      window.lastAutoFilledCode = '';
+      if (!value) {
+        document.getElementById('name').value = '';
+        setSelectValue(document.getElementById('color'), '無');
+        setSelectValue(document.getElementById('size'), '無');
+      }
+      return;
+    }
+    if (value === window.lastAutoFilledCode) return;
+    autoFillFromCode(value);
+  });
 }
 
 function loadProductCodesInBackground(force = false, showStatus = false) {
@@ -335,6 +349,7 @@ function loadProductCodesInBackground(force = false, showStatus = false) {
   if (showStatus) setStatus('載入商品編號中...');
 
   apiCall("getProductCodes").then(codes => {
+    window.cachedProductCodes = codes;
     const datalist = document.getElementById('productCodes');
     datalist.innerHTML = '';
     codes.forEach(code => {
@@ -350,6 +365,63 @@ function loadProductCodesInBackground(force = false, showStatus = false) {
     window.codeAutocompleteLoading = false;
     if (showStatus) setTimeout(() => setStatus(''), 800);
   });
+}
+
+async function ensureProductCodesLoaded() {
+  if (Array.isArray(window.cachedProductCodes) && window.cachedProductCodes.length > 0) {
+    return window.cachedProductCodes;
+  }
+  const codes = await apiCall("getProductCodes");
+  window.cachedProductCodes = codes;
+  return codes;
+}
+
+async function ensureProductsLoaded() {
+  if (Array.isArray(window.cachedProducts) && window.cachedProducts.length > 0) {
+    return window.cachedProducts;
+  }
+  const products = await apiCall("getProducts");
+  const list = Array.isArray(products) ? products : (products.products || []);
+  window.cachedProducts = list;
+  return list;
+}
+
+function isCompleteCode(code) {
+  return /^[A-Z]{2}\d{3}[A-Z]{2}$/i.test(code);
+}
+
+function setSelectValue(selectEl, value) {
+  if (!selectEl) return;
+  const target = value || '無';
+  const exists = Array.from(selectEl.options).some(option => option.value === target);
+  if (!exists) {
+    const option = document.createElement('option');
+    option.value = target;
+    option.textContent = target;
+    selectEl.appendChild(option);
+  }
+  selectEl.value = target;
+}
+
+async function autoFillFromCode(code) {
+  try {
+    const products = await ensureProductsLoaded();
+    const match = products.find(product =>
+      (product.code || '').toUpperCase() === code
+    );
+
+    if (!match) {
+      window.lastAutoFilledCode = '';
+      return;
+    }
+
+    document.getElementById('name').value = match.name || '';
+    setSelectValue(document.getElementById('color'), match.color || '');
+    setSelectValue(document.getElementById('size'), match.size || '');
+    window.lastAutoFilledCode = code;
+  } catch (err) {
+    console.error('自動帶入商品資訊失敗：', err);
+  }
 }
 
 function loadBuyerListInBackground(force = false, showStatus = false) {
@@ -470,6 +542,39 @@ async function submitOrder() {
   }
 
   try {
+    if (order.code) {
+      const normalizedCode = order.code.toUpperCase();
+      if (isCompleteCode(normalizedCode)) {
+        const codes = await ensureProductCodesLoaded();
+        if (!codes.includes(normalizedCode)) {
+          return setStatus('商品編號不存在，請確認');
+        }
+        order.code = normalizedCode;
+        order.name = '';
+        order.color = '';
+        order.size = '';
+      } else {
+        order.code = '';
+      }
+    }
+
+    if (!order.code) {
+      if (!order.name || !order.color || !order.size || order.color === '無' || order.size === '無') {
+        return setStatus('請輸入商品名稱、顏色與大小');
+      }
+
+      const products = await ensureProductsLoaded();
+      const matched = products.some(product =>
+        (product.name || '') === order.name &&
+        (product.color || '') === order.color &&
+        (product.size || '') === order.size
+      );
+
+      if (!matched) {
+        return setStatus('商品名稱、顏色與大小無法匹配商品清單');
+      }
+    }
+
     setStatus('記錄中...');
     await apiCall("appendOrder", "POST", order);
     setStatus('已成功記錄');
