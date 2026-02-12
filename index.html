@@ -46,6 +46,16 @@
       background: #fff;
     }
 
+    .option-select {
+      width: 50%;
+      max-width: 100px;
+    }
+
+    .qty-input {
+      width: 120px;
+      max-width: 60%;
+    }
+
     button {
       background: #111;
       color: #fff;
@@ -73,7 +83,7 @@
     }
     
     .refresh-btn {
-      background: #666;
+      background: #1e88e5;
       font-size: 13px;
       padding: 6px 10px;
       margin-top: 6px;
@@ -82,7 +92,7 @@
     }
     
     .refresh-btn:hover {
-      background: #888;
+      background: #1976d2;
     }
     
     .small-refresh {
@@ -188,7 +198,7 @@
   <!-- 訂購人 -->
   <div class="card">
     <label>訂購人（必填）
-      <button class="refresh-btn small-refresh" onclick="refreshBuyerList()">🔄</button>
+      <button class="refresh-btn small-refresh" onclick="refreshBuyerList()">刷新</button>
     </label>
     <input id="buyer" placeholder="請輸入訂購人" list="buyerNames">
     <datalist id="buyerNames"></datalist>
@@ -198,7 +208,8 @@
   <div class="card">
     <label><strong>選擇商品方式：</strong></label>
     <label style="margin-top:10px; font-weight: normal;">✓ 商品編號（推薦）</label>
-    <input id="code" placeholder="例如 A001">
+    <input id="code" placeholder="例如 A001" list="productCodes">
+    <datalist id="productCodes"></datalist>
 
     <label style="margin-top:10px; font-weight: normal;">或 商品名稱（關鍵字）</label>
     <input id="name" placeholder="例如 咖啡" list="productNames">
@@ -208,24 +219,24 @@
   <!-- 數量 -->
   <div class="card">
     <label><strong>數量（必填）</strong></label>
-    <input id="qty" type="number" min="1" value="1">
+    <input id="qty" class="qty-input" type="number" min="1" value="1">
   </div>
 
   <!-- 自訂欄位（可選） -->
   <div class="card">
     <label style="font-weight: normal; opacity: 0.6;">
-      點擊「🔄」按鈕以顯示可選的顏色與大小
-      <button class="refresh-btn" onclick="refreshProductOptions()">🔄 重新載入</button>
+      <button class="refresh-btn" onclick="refreshProductOptions()">刷新</button>
+      點擊刷新選項<br>
     </label>
     
-    <label style="margin-top:10px; font-weight: normal; opacity: 0.8;">顏色（可不填）</label>
-    <select id="color">
-      <option value="">-- 請先載入選項 --</option>
+    <label style="margin-top:10px; font-weight: normal; opacity: 0.8;">顏色: </label>
+    <select id="color" class="option-select">
+      <option value="無">無</option>
     </select>
 
-    <label style="margin-top:10px; font-weight: normal; opacity: 0.8;">大小（可不填）</label>
-    <select id="size">
-      <option value="">-- 請先載入選項 --</option>
+    <label style="margin-top:10px; font-weight: normal; opacity: 0.8;">大小: </label>
+    <select id="size" class="option-select">
+      <option value="無">無</option>
     </select>
   </div>
 
@@ -240,14 +251,8 @@
 
 </div>
 
+<script src="common.js"></script>
 <script>
-
-const API_URL = "https://sales-v1-api-26316719641.asia-east1.run.app"; // ← 請改成您的 Cloud Run URL
-
-// === Helper Functions ===
-function token() { 
-  return localStorage.getItem("sessionToken"); 
-}
 
 function setStatus(msg) {
   const statusEl = document.getElementById('status') || document.getElementById('loginStatus');
@@ -264,31 +269,6 @@ function showApp() {
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("mainApp").style.display = "block";
   document.getElementById("topNav").style.display = "block";
-}
-
-// === API Functions ===
-async function apiCall(action, method = "GET", body = null) {
-  const options = {
-    method: method,
-    headers: {
-      "Content-Type": "application/json",
-      "x-session-token": token()
-    }
-  };
-  
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-  
-  const url = action.startsWith("?") ? API_URL + action : API_URL + "?action=" + action;
-  const res = await fetch(url, options);
-  
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(errorData.error || "Request failed");
-  }
-  
-  return await res.json();
 }
 
 // === Login ===
@@ -314,7 +294,7 @@ async function login(){
     if (data.token) {
       localStorage.setItem("sessionToken", data.token);
       showApp();
-      await initializeApp();   // ✅ load buyers + products
+      initializeApp();   // ✅ background load
     } else {
       alert("PIN 錯誤");
     }
@@ -331,14 +311,54 @@ function logout() {
 
 // === Initialize App ===
 async function initializeApp() {
-  await initializeBuyerAutocomplete();
-  await initializeProductAutocomplete();
+  if (window.appInitialized) return;
+  window.appInitialized = true;
+  initializeProductAutocomplete();
+  setupCodeAutocomplete();
+  loadBuyerListInBackground();
+  loadProductCodesInBackground();
 }
 
-// === 初始化訂購人自動完成列表 ===
-async function initializeBuyerAutocomplete() {
-  try {
-    const buyers = await apiCall("getBuyerNames");
+function setupCodeAutocomplete() {
+  const codeInput = document.getElementById('code');
+  if (!codeInput || codeInput.dataset.autocompleteBound) return;
+  codeInput.dataset.autocompleteBound = 'true';
+  codeInput.addEventListener('focus', () => {
+    loadProductCodesInBackground();
+  });
+}
+
+function loadProductCodesInBackground(force = false, showStatus = false) {
+  if (window.codeAutocompleteLoading) return;
+  if (window.codeAutocompleteLoaded && !force) return;
+  window.codeAutocompleteLoading = true;
+  if (showStatus) setStatus('載入商品編號中...');
+
+  apiCall("getProductCodes").then(codes => {
+    const datalist = document.getElementById('productCodes');
+    datalist.innerHTML = '';
+    codes.forEach(code => {
+      const option = document.createElement('option');
+      option.value = code;
+      datalist.appendChild(option);
+    });
+    window.codeAutocompleteLoaded = true;
+  }).catch(() => {
+    window.codeAutocompleteLoaded = false;
+    if (showStatus) setStatus('載入商品編號失敗');
+  }).finally(() => {
+    window.codeAutocompleteLoading = false;
+    if (showStatus) setTimeout(() => setStatus(''), 800);
+  });
+}
+
+function loadBuyerListInBackground(force = false, showStatus = false) {
+  if (window.buyerListLoading) return;
+  if (window.buyerListLoaded && !force) return;
+  window.buyerListLoading = true;
+  if (showStatus) setStatus('重新載入訂購人列表中...');
+
+  apiCall("getBuyerNames").then(buyers => {
     const datalist = document.getElementById('buyerNames');
     datalist.innerHTML = '';
     buyers.forEach(buyer => {
@@ -346,16 +366,19 @@ async function initializeBuyerAutocomplete() {
       option.value = buyer;
       datalist.appendChild(option);
     });
-  } catch (err) {
+    window.buyerListLoaded = true;
+  }).catch(err => {
     console.error('取得訂購人列表失敗：', err);
-  }
+  }).finally(() => {
+    window.buyerListLoading = false;
+    if (showStatus) setTimeout(() => setStatus(''), 1000);
+  });
 }
 
 // === 重新載入訂購人列表 ===
 async function refreshBuyerList() {
-  setStatus('重新載入訂購人列表中...');
-  await initializeBuyerAutocomplete();
-  setTimeout(() => setStatus(''), 1000);
+  loadBuyerListInBackground(true, true);
+  loadProductCodesInBackground(false, false);
 }
 
 // === 初始化自動完成列表（唯一商品名稱）===
@@ -399,7 +422,7 @@ async function refreshProductOptions() {
     
     // 更新顏色下拉選單
     const colorSelect = document.getElementById('color');
-    colorSelect.innerHTML = '<option value="">-- 不選擇 --</option>';
+    colorSelect.innerHTML = '<option value="無">無</option>';
     options.colors.forEach(color => {
       const option = document.createElement('option');
       option.value = color;
@@ -409,7 +432,7 @@ async function refreshProductOptions() {
     
     // 更新大小下拉選單
     const sizeSelect = document.getElementById('size');
-    sizeSelect.innerHTML = '<option value="">-- 不選擇 --</option>';
+    sizeSelect.innerHTML = '<option value="無">無</option>';
     options.sizes.forEach(size => {
       const option = document.createElement('option');
       option.value = size;
@@ -460,8 +483,8 @@ async function submitOrder() {
 function resetForm() {
   document.getElementById('code').value = '';
   document.getElementById('name').value = '';
-  document.getElementById('color').innerHTML = '<option value="">-- 請先載入選項 --</option>';
-  document.getElementById('size').innerHTML = '<option value="">-- 請先載入選項 --</option>';
+  document.getElementById('color').innerHTML = '<option value="無">無</option>';
+  document.getElementById('size').innerHTML = '<option value="無">無</option>';
   document.getElementById('qty').value = 1;
   document.getElementById('buyer').value = '';
 }
