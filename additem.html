@@ -25,8 +25,10 @@
       color: #fff;
       padding: 14px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -40,6 +42,9 @@
     .header-actions {
       display: flex;
       gap: 8px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .back-btn {
@@ -52,14 +57,18 @@
       cursor: pointer;
       text-decoration: none;
       display: inline-block;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
 
     .back-btn:hover {
       background: #666;
     }
 
-    .container { 
-      padding: 14px; 
+    .container {
+      padding: 14px;
+      width: 100%;
+      margin: 0 auto;
     }
 
     .card {
@@ -105,6 +114,7 @@
 
     .form-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 12px;
       margin-bottom: 12px;
       align-items: flex-end;
@@ -123,7 +133,8 @@
 
     .form-field input,
     .form-field select {
-      width: 200px;
+      width: 100%;
+      max-width: 200px;
       font-size: 14px;
       padding: 8px;
       border-radius: 6px;
@@ -274,6 +285,30 @@
       text-align: left;
     }
 
+    @media (max-width: 640px) {
+      .header h1,
+      .header-actions {
+        width: 100%;
+      }
+
+      .form-field,
+      .product-category-field,
+      .product-name-field {
+        width: 100%;
+        flex: 1 1 100%;
+      }
+
+      .form-field input,
+      .form-field select {
+        max-width: 100%;
+      }
+
+      .product-generate-row,
+      .code-create-actions {
+        flex-wrap: wrap;
+      }
+    }
+
     @media (max-width: 900px) {
       .code-reference-row {
         flex-direction: column;
@@ -283,6 +318,12 @@
       .code-create-card,
       .reference-card {
         width: 100%;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        max-width: 1200px;
       }
     }
   </style>

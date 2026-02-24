@@ -20,8 +20,10 @@
       color: #fff;
       padding: 14px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -35,6 +37,9 @@
     .header-actions {
       display: flex;
       gap: 8px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .back-btn {
@@ -44,12 +49,21 @@
       padding: 8px 16px;
       border-radius: 8px;
       font-size: 14px;
+      cursor: pointer;
       text-decoration: none;
       display: inline-block;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .back-btn:hover {
+      background: #666;
     }
 
     .container {
       padding: 14px;
+      width: 100%;
+      margin: 0 auto;
     }
 
     .card {
@@ -83,14 +97,16 @@
     }
 
     .table-wrap {
+      width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
 
     table {
-      width: 100%;
+      width: max-content;
+      min-width: 100%;
       border-collapse: collapse;
-      min-width: 720px;
+      table-layout: auto;
       font-size: 14px;
     }
 
@@ -98,7 +114,8 @@
       border: 1px solid #ddd;
       padding: 8px;
       text-align: left;
-      white-space: nowrap;
+      white-space: normal;
+      word-break: break-word;
     }
 
     th {
@@ -120,20 +137,21 @@
     }
 
     .name-row {
-      width: 33.3333%;
-      min-width: 220px;
+      width: 100%;
+      min-width: 0;
     }
 
     .three-col-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       align-items: end;
-      width: 33.3333%;
-      min-width: 220px;
+      width: 100%;
+      min-width: 0;
     }
 
     .three-col-item {
-      flex: 1;
+      flex: 1 1 100%;
     }
 
     .form-grid label {
@@ -190,6 +208,32 @@
       font-size: 13px;
       color: #444;
       min-height: 18px;
+    }
+
+    @media (max-width: 640px) {
+      .header h1 {
+        width: 100%;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        max-width: 1200px;
+      }
+
+      .name-row {
+        width: 33.3333%;
+        min-width: 220px;
+      }
+
+      .three-col-row {
+        width: 66.6666%;
+        min-width: 420px;
+      }
+
+      .three-col-item {
+        flex: 1 1 0;
+      }
     }
   </style>
 </head>
