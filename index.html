@@ -616,15 +616,19 @@ async function submitOrder() {
     }
 
     if (!order.code) {
-      if (!order.name || !order.color || !order.size || order.color === '無' || order.size === '無') {
+      if (!order.name || !order.color || !order.size) {
         return setStatus('請輸入商品名稱、顏色與大小');
       }
 
+      const targetName = (order.name || '').trim();
+      const targetColor = (order.color || '').trim();
+      const targetSize = (order.size || '').trim();
+
       const products = await ensureProductsLoaded();
       const matched = products.some(product =>
-        (product.name || '') === order.name &&
-        (product.color || '') === order.color &&
-        (product.size || '') === order.size
+        (product.name || '').trim() === targetName &&
+        (product.color || '').trim() === targetColor &&
+        (product.size || '').trim() === targetSize
       );
 
       if (!matched) {
