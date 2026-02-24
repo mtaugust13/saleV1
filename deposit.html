@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>匯款名單</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      max-width: 100%;
+      overflow-x: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+      background: #f6f6f6;
+    }
+
+    .header {
+      background: #111;
+      color: #fff;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .back-btn {
+      background: #444;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .container {
+      padding: 14px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .refresh-btn {
+      background: #1e88e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #444;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f1f1f1;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .empty {
+      color: #777;
+      font-size: 14px;
+      padding: 8px 0;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .name-row {
+      width: 33.3333%;
+      min-width: 220px;
+    }
+
+    .three-col-row {
+      display: flex;
+      gap: 10px;
+      align-items: end;
+      width: 33.3333%;
+      min-width: 220px;
+    }
+
+    .three-col-item {
+      flex: 1;
+    }
+
+    .form-grid label {
+      font-size: 13px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .form-input {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .op-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .op-group .op-btn {
+      flex: 1;
+    }
+
+    .op-btn {
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .op-btn.active {
+      background: #1e88e5;
+      color: #fff;
+      border-color: #1e88e5;
+    }
+
+    .submit-btn {
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    .form-status {
+      font-size: 13px;
+      color: #444;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>匯款名單</h1>
+  <div class="header-actions">
+    <a href="index.html" class="back-btn">訂單記錄</a>
+    <a href="additem.html" class="back-btn">新增商品</a>
+    <a href="report.html" class="back-btn">報表</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="actions">
+      <button class="refresh-btn" onclick="loadRemittanceList()">刷新</button>
+      <div class="status" id="status"></div>
+    </div>
+    <div id="tableContainer" class="table-wrap"></div>
+  </div>
+
+  <div class="card">
+    <div class="form-grid">
+      <div class="name-row">
+        <label for="nameSelect">姓名（A 欄）</label>
+        <select id="nameSelect" class="form-input">
+          <option value="">請選擇姓名</option>
+        </select>
+      </div>
+
+      <div class="three-col-row">
+        <div class="three-col-item">
+          <label>運算</label>
+          <div class="op-group">
+            <button type="button" class="op-btn" id="plusBtn" onclick="setOperation('+')">+</button>
+            <button type="button" class="op-btn" id="minusBtn" onclick="setOperation('-')">-</button>
+          </div>
+        </div>
+
+        <div class="three-col-item">
+          <label for="amountInput">金額</label>
+          <input id="amountInput" class="form-input" type="number" step="any" inputmode="decimal" min="0" placeholder="請輸入數字">
+        </div>
+
+        <div class="three-col-item">
+          <label>&nbsp;</label>
+          <button type="button" class="submit-btn form-input" onclick="submitAdjust()">送出</button>
+        </div>
+      </div>
+
+      <div id="formStatus" class="form-status"></div>
+    </div>
+  </div>
+</div>
+
+<script src="common.js"></script>
+<script>
+  let selectedOperation = '';
+
+  function setStatus(msg) {
+    document.getElementById('status').textContent = msg || '';
+  }
+
+  function setFormStatus(msg) {
+    document.getElementById('formStatus').textContent = msg || '';
+  }
+
+  function setOperation(op) {
+    selectedOperation = op;
+    const plusBtn = document.getElementById('plusBtn');
+    const minusBtn = document.getElementById('minusBtn');
+    plusBtn.classList.toggle('active', op === '+');
+    minusBtn.classList.toggle('active', op === '-');
+  }
+
+  function populateNameSelect(values) {
+    const select = document.getElementById('nameSelect');
+    const rows = Array.isArray(values) ? values.slice(1) : [];
+    const names = [];
+    const seen = new Set();
+
+    rows.forEach(row => {
+      const name = String((row && row[0]) || '').trim();
+      if (!name || seen.has(name)) {
+        return;
+      }
+      seen.add(name);
+      names.push(name);
+    });
+
+    const options = ['<option value="">請選擇姓名</option>'];
+    names.forEach(name => {
+      options.push('<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>');
+    });
+    select.innerHTML = options.join('');
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderTable(values) {
+    const container = document.getElementById('tableContainer');
+
+    if (!Array.isArray(values) || values.length === 0) {
+      container.innerHTML = '<div class="empty">目前沒有資料</div>';
+      return;
+    }
+
+    const headers = values[0] || [];
+    const rows = values.slice(1);
+
+    const headHtml = headers.map(h => '<th>' + escapeHtml(h) + '</th>').join('');
+    const bodyHtml = rows.map(row => {
+      const cols = headers.map((_, idx) => '<td>' + escapeHtml(row[idx] || '') + '</td>').join('');
+      return '<tr>' + cols + '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<table>' +
+        '<thead><tr>' + headHtml + '</tr></thead>' +
+        '<tbody>' + bodyHtml + '</tbody>' +
+      '</table>';
+  }
+
+  async function loadRemittanceList() {
+    try {
+      setStatus('載入中...');
+      const action = 'get_sheet_data&sheet=' + encodeURIComponent('匯款名單') + '&range=A1:Z';
+      const data = await apiCall(action);
+      const values = data.values || [];
+      renderTable(values);
+      populateNameSelect(values);
+      setStatus('已更新');
+    } catch (err) {
+      setStatus(err.message || '載入失敗');
+    }
+  }
+
+  async function submitAdjust() {
+    const name = document.getElementById('nameSelect').value;
+    const amountText = document.getElementById('amountInput').value.trim();
+    const amount = Number(amountText);
+
+    if (!name) {
+      setFormStatus('請先選擇姓名');
+      return;
+    }
+
+    if (selectedOperation !== '+' && selectedOperation !== '-') {
+      setFormStatus('請選擇 + 或 -');
+      return;
+    }
+
+    if (!amountText || Number.isNaN(amount)) {
+      setFormStatus('金額必須為數字');
+      return;
+    }
+
+    if (amount < 0) {
+      setFormStatus('金額不可為負數');
+      return;
+    }
+
+    try {
+      setFormStatus('送出中...');
+      await apiCall('?action=adjustRemittanceAmount', 'POST', {
+        name,
+        operation: selectedOperation,
+        amount
+      });
+      setFormStatus('已更新 C 欄');
+      document.getElementById('amountInput').value = '';
+      await loadRemittanceList();
+    } catch (err) {
+      setFormStatus(err.message || '更新失敗');
+    }
+  }
+
+  window.addEventListener('load', () => {
+    if (!token()) {
+      window.location.href = 'index.html';
+      return;
+    }
+    loadRemittanceList();
+  });
+</script>
+
+</body>
+</html>

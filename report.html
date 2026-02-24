@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Looker Studio Report</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #f6f6f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+    }
+
+    .page {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: #111;
+      color: #fff;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-weight: 600;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .back-btn {
+      background: #444;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .frame-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <span>Looker Studio</span>
+      <div class="header-actions">
+        <a href="index.html" class="back-btn">訂單記錄</a>
+        <a href="deposit.html" class="back-btn">匯款名單</a>
+        <a href="additem.html" class="back-btn">新增商品</a>
+      </div>
+    </div>
+    <div class="frame-wrap">
+      <iframe
+        width="600"
+        height="1068"
+        src="https://lookerstudio.google.com/embed/reporting/8715bb7e-cc8f-4d89-b499-82fb3903c87f/page/page_12345"
+        frameborder="0"
+        style="border:0"
+        allowfullscreen
+        sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+      </iframe>
+    </div>
+  </div>
+</body>
+</html>
